@@ -301,7 +301,7 @@ android {
   }
 
   defaultConfig {
-    applicationId = "com.edde746.plezy"
+    applicationId = "com.edde746.plezy.hdrtest" // fork: installs beside the official app
     minSdk = 25 // Fire OS 6.x (API 25); the mpv-android AAR shares the same floor
     targetSdk = flutter.targetSdkVersion
     versionCode = flutter.versionCode
@@ -334,6 +334,14 @@ android {
   }
 
   signingConfigs {
+    // Fork test key (committed, not secret): CI builds without the upstream release
+    // keystore sign with it so successive fork APKs install over each other.
+    create("forkTest") {
+      storeFile = file("fork-test.jks")
+      storePassword = "plezyhdr"
+      keyAlias = "plezyhdr"
+      keyPassword = "plezyhdr"
+    }
     create("release") {
       val keystorePropertiesFile = rootProject.file("key.properties")
       if (keystorePropertiesFile.exists()) {
@@ -352,10 +360,11 @@ android {
     release {
       // Only use release signing if key.properties exists (not in CI/CD)
       val keystorePropertiesFile = rootProject.file("key.properties")
-      if (keystorePropertiesFile.exists()) {
-        signingConfig = signingConfigs.getByName("release")
+      signingConfig = if (keystorePropertiesFile.exists()) {
+        signingConfigs.getByName("release")
+      } else {
+        signingConfigs.getByName("forkTest")
       }
-      // If key.properties doesn't exist, it will use debug signing for CI builds
       ndk {
         debugSymbolLevel = "FULL"
       }
