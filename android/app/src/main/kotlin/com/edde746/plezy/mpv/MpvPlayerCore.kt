@@ -304,6 +304,32 @@ class MpvPlayerCore private constructor(
      * every content correctly (HDR arrives tone-mapped, as before).
      */
     internal fun wantsHdrSurface(transfer: String?): Boolean = transfer == "smpte2084" || transfer == "arib-std-b67"
+
+    /** Comment a user shader carries to declare it HDR-only (it decodes and
+     * re-encodes PQ, so it would corrupt SDR output). Read from the first few
+     * KiB of each shader file. */
+    internal const val HDR_ONLY_SHADER_MARKER = "plezy: hdr-only"
+
+    /** Paths in mpv's `glsl-shaders` property string (path-list, ':' separated). */
+    internal fun shaderPaths(value: String?): List<String> = value.orEmpty().split(':').map { it.trim() }.filter { it.isNotEmpty() }
+
+    /** Whether [file] declares [HDR_ONLY_SHADER_MARKER]; unreadable files do not. */
+    internal fun isHdrOnlyShader(file: java.io.File): Boolean = try {
+      file.inputStream().use { input ->
+        val head = ByteArray(4096)
+        val n = input.read(head)
+        n > 0 && String(head, 0, n, Charsets.UTF_8).contains(HDR_ONLY_SHADER_MARKER)
+      }
+    } catch (e: Exception) {
+      false
+    }
+
+    /** Whether user shaders need the GL vo for the current file. HDR-only shaders
+     * run only on PQ/HLG content rendered to the PQ surface: on an sRGB surface
+     * mpv has already tone-mapped to SDR, and the shader would misread it as PQ.
+     * Until the transfer is known they wait on the plane. */
+    internal fun needsShaderGpuVo(requested: Boolean, hdrOnly: Boolean, gamma: String?, pqOutput: Boolean): Boolean =
+      requested && (!hdrOnly || (pqOutput && (gamma == "pq" || gamma == "hlg")))
   }
 
   /** Video-only paths. The plugin always constructs video cores with the
@@ -388,6 +414,22 @@ class MpvPlayerCore private constructor(
    * deferred display-mode restore on teardown (see
    * [FrameRateManager.clearVideoFrameRate]). */
   @Volatile private var hdrDisplayActive: Boolean = false
+
+  /** Whether mpv renders into the BT.2020 PQ GL surface ([applyContentColorTransfer]).
+   * HDR-only shaders read and write PQ, so they must not run on an sRGB surface. */
+  @Volatile private var pqOutputActive: Boolean = false
+
+  /** Whether `glsl-shaders` currently lists anything. */
+  @Volatile private var shadersRequested: Boolean = false
+
+  /** Whether every listed shader carries [HDR_ONLY_SHADER_MARKER]: such shaders
+   * only make sense on PQ/HLG content rendered to the PQ surface, so everything
+   * else keeps the video plane instead of running them. */
+  @Volatile private var shadersHdrOnly: Boolean = false
+
+  /** Reads the listed shaders' headers off the main thread; a newer
+   * `glsl-shaders` value cancels the read of an older one. */
+  private var shaderStateJob: Job? = null
 
   /** Read at [initialize], before the app's own display-mode switch:
    * `Display.getHdrCapabilities` answers for the active mode, and a
@@ -964,6 +1006,11 @@ class MpvPlayerCore private constructor(
       dvOutputAllowed = true
       pendingDvProfile = null
       hdrSurfaceDecided = false
+      pqOutputActive = false
+      shadersRequested = false
+      shadersHdrOnly = false
+      shaderStateJob?.cancel()
+      shaderStateJob = null
       hdrDisplayActive = false
       displayHdrSupported = false
       displayDvSupported = false
@@ -1947,7 +1994,24 @@ class MpvPlayerCore private constructor(
    * ambient lighting) switch the session live, without a channel contract.
    */
   private fun onShaderState(shaders: String) {
-    setGpuVoRequirement(GpuVoPolicy.REASON_SHADERS, shaders.isNotBlank())
+    val paths = shaderPaths(shaders)
+    shaderStateJob?.cancel()
+    shaderStateJob = scope.launch {
+      val hdrOnly = paths.isNotEmpty() &&
+        withContext(Dispatchers.IO) {
+          paths.all { isHdrOnlyShader(java.io.File(it)) }
+        }
+      shadersRequested = paths.isNotEmpty()
+      shadersHdrOnly = hdrOnly
+      refreshShaderRequirement()
+    }
+  }
+
+  private fun refreshShaderRequirement() {
+    setGpuVoRequirement(
+      GpuVoPolicy.REASON_SHADERS,
+      needsShaderGpuVo(shadersRequested, shadersHdrOnly, videoGamma, pqOutputActive)
+    )
   }
 
   /**
@@ -1957,6 +2021,7 @@ class MpvPlayerCore private constructor(
   private fun onHdrToneMapState(gamma: String) {
     videoGamma = gamma
     refreshHdrToneMapRequirement()
+    refreshShaderRequirement()
   }
 
   private fun refreshHdrToneMapRequirement() {
@@ -2702,6 +2767,8 @@ class MpvPlayerCore private constructor(
         writeProperty("egl-output-format", outputFormat)
         writeProperty("target-trc", "pq")
         writeProperty("target-prim", "bt.2020")
+        pqOutputActive = true
+        refreshShaderRequirement()
       } catch (e: MpvException) {
         // Best-effort upgrade, same as the branch above: a libmpv that does
         // not expose one of these keeps the sRGB surface and tone-maps HDR as

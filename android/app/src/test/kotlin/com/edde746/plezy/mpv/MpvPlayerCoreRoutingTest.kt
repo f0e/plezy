@@ -46,4 +46,39 @@ class MpvPlayerCoreRoutingTest {
 
     assertFalse("scale" in replaced)
   }
+
+  @Test
+  fun `HDR-only shaders take the GL vo only on PQ and HLG content on the PQ surface`() {
+    assertTrue(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = true, gamma = "pq", pqOutput = true))
+    assertTrue(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = true, gamma = "hlg", pqOutput = true))
+    assertFalse(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = true, gamma = "bt.1886", pqOutput = true))
+    assertFalse(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = true, gamma = null, pqOutput = true))
+    // An sRGB surface (no HDR display, or a core latched by an SDR first file):
+    // mpv tone-maps to SDR and a PQ shader would misread the result.
+    assertFalse(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = true, gamma = "pq", pqOutput = false))
+    assertTrue(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = false, gamma = "bt.1886", pqOutput = false))
+    assertTrue(MpvPlayerCore.needsShaderGpuVo(requested = true, hdrOnly = false, gamma = null, pqOutput = false))
+    assertFalse(MpvPlayerCore.needsShaderGpuVo(requested = false, hdrOnly = false, gamma = "pq", pqOutput = true))
+  }
+
+  @Test
+  fun `shader paths split mpv's path list`() {
+    assertEquals(listOf("/a.glsl", "/b.glsl"), MpvPlayerCore.shaderPaths("/a.glsl:/b.glsl"))
+    assertEquals(emptyList<String>(), MpvPlayerCore.shaderPaths(""))
+    assertEquals(emptyList<String>(), MpvPlayerCore.shaderPaths(null))
+  }
+
+  @Test
+  fun `only shaders carrying the marker are HDR-only`() {
+    val dir = java.nio.file.Files.createTempDirectory("shaders").toFile()
+    try {
+      val hdr = java.io.File(dir, "hdr.glsl").apply { writeText("// ${MpvPlayerCore.HDR_ONLY_SHADER_MARKER}\n//!HOOK OUTPUT\n") }
+      val plain = java.io.File(dir, "plain.glsl").apply { writeText("//!HOOK OUTPUT\n") }
+      assertTrue(MpvPlayerCore.isHdrOnlyShader(hdr))
+      assertFalse(MpvPlayerCore.isHdrOnlyShader(plain))
+      assertFalse(MpvPlayerCore.isHdrOnlyShader(java.io.File(dir, "missing.glsl")))
+    } finally {
+      dir.deleteRecursively()
+    }
+  }
 }
