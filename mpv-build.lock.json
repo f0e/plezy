@@ -2,27 +2,27 @@
   "artifacts": {
     "android": {
       "aar": {
-        "asset": "mpv-android-b3f46d9ae458.aar",
-        "checksum": "6bb230522bed5d9c1178189602d71a5cb6f1048fa145aabae390975d62c2af77",
-        "key": "b3f46d9ae458"
+        "asset": "mpv-android-72559c56471f.aar",
+        "checksum": "63ddfd0bc4e5fc02e0f5f21474fa9abd4d30833a0add958635a4587430d6d513",
+        "key": "72559c56471f"
       },
-      "assetBase": "https://github.com/edde746/mpv-build/releases/download/binaries-63bbd7584792",
+      "assetBase": "https://github.com/f0e/mpv-build/releases/download/binaries-0d811277cb34",
       "symbols": {
         "arm64-v8a": {
-          "asset": "mpv-android-b3f46d9ae458-arm64-v8a-symbols.zip",
-          "checksum": "34ae57dd1a103d41e97b7ae018e9f164ba4cc5cf2309498111c513c00064e087"
+          "asset": "mpv-android-72559c56471f-arm64-v8a-symbols.zip",
+          "checksum": "f8617b9505fcaa6e6d9f72b0ebb9d7b1ade9d5b1eae73573de586ae1f5ec5e5a"
         },
         "armeabi-v7a": {
-          "asset": "mpv-android-b3f46d9ae458-armeabi-v7a-symbols.zip",
-          "checksum": "8becd55ff36b945c1a9a74e9efc7682839cdbd3a387d08fa5a1e0708fb1d7b51"
+          "asset": "mpv-android-72559c56471f-armeabi-v7a-symbols.zip",
+          "checksum": "70714986bc9df308705a519e07a7f728256ab5fa2b874b0a8520bf57531b01c4"
         },
         "x86": {
-          "asset": "mpv-android-b3f46d9ae458-x86-symbols.zip",
-          "checksum": "b6865186622b3694f249ea7b5bcf02eae66337b5ed822536dea22b1825ba207c"
+          "asset": "mpv-android-72559c56471f-x86-symbols.zip",
+          "checksum": "2d813bc5f4c857e2e0e9b243e56f96d19cb25b9c98d45fa067ac4267ac405b71"
         },
         "x86_64": {
-          "asset": "mpv-android-b3f46d9ae458-x86_64-symbols.zip",
-          "checksum": "d0517ba1995aa44deb42e3d1045b0d3af1bfde113e943c9491f506c06d02ddc7"
+          "asset": "mpv-android-72559c56471f-x86_64-symbols.zip",
+          "checksum": "d73fe4a1caeecaef1230f6ae6eb6f0b0fd049c592cac48c5180c5f60f2890c4e"
         }
       }
     },
