@@ -305,6 +305,19 @@ class MpvPlayerCore private constructor(
      */
     internal fun wantsHdrSurface(transfer: String?): Boolean = transfer == "smpte2084" || transfer == "arib-std-b67"
 
+    /**
+     * The `content-color-transfer` value matching mpv's decoded
+     * `video-params/gamma`, for sessions opened without one (a local file, a
+     * server item without color metadata). Null while mpv has not decoded a
+     * frame yet; SDR gammas map to "sdr", which [wantsHdrSurface] declines.
+     */
+    internal fun transferForGamma(gamma: String?): String? = when (gamma?.trim()?.lowercase()) {
+      null, "", "auto" -> null
+      "pq" -> "smpte2084"
+      "hlg" -> "arib-std-b67"
+      else -> "sdr"
+    }
+
     /** Comment a user shader carries to declare it HDR-only (it decodes and
      * re-encodes PQ, so it would corrupt SDR output). Read from the first few
      * KiB of each shader file. */
@@ -2020,8 +2033,26 @@ class MpvPlayerCore private constructor(
    */
   private fun onHdrToneMapState(gamma: String) {
     videoGamma = gamma
+    decideHdrSurfaceFromStream(gamma)
     refreshHdrToneMapRequirement()
     refreshShaderRequirement()
+  }
+
+  /**
+   * A session opened without a transfer announcement decides its GL surface
+   * from the first decoded gamma — only while still on the video plane, so no
+   * GL surface exists yet in the other colorspace. A GL vo already running
+   * keeps its sRGB surface, as before.
+   */
+  private fun decideHdrSurfaceFromStream(gamma: String) {
+    if (hdrSurfaceDecided) return
+    val transfer = transferForGamma(gamma) ?: return
+    val onPlane = usesMediaCodecVo && synchronized(gpuVoReasons) { activeGpuVoTarget == null }
+    if (!onPlane) {
+      hdrSurfaceDecided = true
+      return
+    }
+    applyContentColorTransfer(transfer, null)
   }
 
   private fun refreshHdrToneMapRequirement() {
@@ -2742,7 +2773,8 @@ class MpvPlayerCore private constructor(
    */
   private fun applyContentColorTransfer(value: String, onComplete: ((Result<Unit>) -> Unit)?) {
     val transfer = value.trim().lowercase()
-    if (hdrSurfaceDecided) {
+    // Unannounced: the decoded stream decides instead ([decideHdrSurfaceFromStream]).
+    if (hdrSurfaceDecided || transfer.isEmpty() || transfer == "unknown") {
       onComplete?.invoke(Result.success(Unit))
       return
     }

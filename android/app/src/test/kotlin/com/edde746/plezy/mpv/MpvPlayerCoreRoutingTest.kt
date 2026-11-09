@@ -62,6 +62,18 @@ class MpvPlayerCoreRoutingTest {
   }
 
   @Test
+  fun `an unannounced session takes its surface transfer from the decoded gamma`() {
+    assertEquals("smpte2084", MpvPlayerCore.transferForGamma("pq"))
+    assertEquals("arib-std-b67", MpvPlayerCore.transferForGamma("HLG"))
+    assertEquals("sdr", MpvPlayerCore.transferForGamma("bt.1886"))
+    assertFalse(MpvPlayerCore.wantsHdrSurface(MpvPlayerCore.transferForGamma("srgb")))
+    // Nothing decoded yet: no decision.
+    assertEquals(null, MpvPlayerCore.transferForGamma(""))
+    assertEquals(null, MpvPlayerCore.transferForGamma("auto"))
+    assertEquals(null, MpvPlayerCore.transferForGamma(null))
+  }
+
+  @Test
   fun `shader paths split mpv's path list`() {
     assertEquals(listOf("/a.glsl", "/b.glsl"), MpvPlayerCore.shaderPaths("/a.glsl:/b.glsl"))
     assertEquals(emptyList<String>(), MpvPlayerCore.shaderPaths(""))
