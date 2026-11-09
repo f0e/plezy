@@ -297,6 +297,21 @@ final class ExternalPlayerReturnLink extends DeepLink {
   Uri toUri() => uri;
 }
 
+/// A video another app opened with Plezy ("Open with"): a file or URL to
+/// play as is. Never parsed from a `plezy:` link — only the platform's
+/// open-media message creates one.
+final class LocalMediaLink extends DeepLink {
+  const LocalMediaLink(this.source, {this.title});
+
+  /// The file (path or `content://` URI) or URL to play.
+  final String source;
+
+  final String? title;
+
+  @override
+  Uri toUri() => Uri.parse(source);
+}
+
 /// The profile [ref] names: a profile id, else the one Plex Home user with
 /// that UUID, else the one profile with that display name (ignoring case).
 /// Null when nothing matches or a rule matches several profiles.

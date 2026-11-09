@@ -46,6 +46,15 @@ void main() {
     });
   });
 
+  group('stripFileExtension', () {
+    test('removes a file extension only', () {
+      expect(stripFileExtension('Film (2007).mkv'), 'Film (2007)');
+      expect(stripFileExtension('Mr. Robot'), 'Mr. Robot');
+      expect(stripFileExtension('Some.Show.S01E01.mp4'), 'Some.Show.S01E01');
+      expect(stripFileExtension('.mkv'), '.mkv');
+    });
+  });
+
   group('isPlayableMediaUrl', () {
     test('accepts direct stream schemes', () {
       expect(isPlayableMediaUrl('https://example.com/a.mkv'), isTrue);

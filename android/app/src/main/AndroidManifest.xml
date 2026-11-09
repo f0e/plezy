@@ -75,6 +75,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="plezy"/>
             </intent-filter>
+            <!-- "Open with" for videos: DeepLinkPlugin.mediaFrom hands them to Dart. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:mimeType="video/*"/>
+            </intent-filter>
         </activity>
         <!-- The default icon. Keep this component name forever: it was the launcher activity before
              app icons became switchable, so every existing home-screen shortcut, TV favourite and

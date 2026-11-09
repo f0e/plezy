@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:saf_util/saf_util.dart';
 
 import '../i18n/strings.g.dart';
@@ -38,7 +37,7 @@ Future<void> pickAndPlayLocalFile(BuildContext context) async {
     return;
   }
   if (source == null || !context.mounted) return;
-  await _play(context, source, title: name == null ? null : p.basenameWithoutExtension(name));
+  await playLocalMedia(context, source, title: name);
 }
 
 /// Asks for a direct media URL and plays it in the built-in player.
@@ -53,13 +52,16 @@ Future<void> promptAndPlayMediaUrl(BuildContext context) async {
     validator: (value) => isPlayableMediaUrl(value) ? null : t.localMedia.invalidUrl,
   );
   if (url == null || !context.mounted) return;
-  await _play(context, url.trim());
+  await playLocalMedia(context, url.trim());
 }
 
-Future<void> _play(BuildContext context, String source, {String? title}) {
+/// Plays [source] — a file path, `content://` URI, or URL — in the built-in
+/// player. [title] is a file name or title; it defaults to the source's file
+/// name.
+Future<void> playLocalMedia(BuildContext context, String source, {String? title}) {
   return navigateToVideoPlayer(
     context,
-    metadata: localMediaItem(source: source, title: title),
+    metadata: localMediaItem(source: source, title: title == null ? null : stripFileExtension(title)),
     isOffline: true,
     resolveWatchState: false,
   );

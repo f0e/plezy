@@ -42,10 +42,17 @@ String localMediaTitle(String source) {
     name = Uri.decodeComponent(name);
   } catch (_) {}
   // SAF document ids look like "primary:Download/Movie.mkv".
-  name = name.split(RegExp(r'[/:\\]')).last;
-  final dot = name.lastIndexOf('.');
-  if (dot > 0) name = name.substring(0, dot);
+  name = stripFileExtension(name.split(RegExp(r'[/:\\]')).last);
   return name.isEmpty ? source : name;
+}
+
+final _fileExtension = RegExp(r'\.[A-Za-z0-9]{2,5}$');
+
+/// [name] without a trailing file extension ("Film.mkv" → "Film"). Leaves
+/// names whose last dot is not an extension alone ("Mr. Robot").
+String stripFileExtension(String name) {
+  final stripped = name.replaceFirst(_fileExtension, '');
+  return stripped.isEmpty ? name : stripped;
 }
 
 /// Whether [text] is a URL the player can stream directly.

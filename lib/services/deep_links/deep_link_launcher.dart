@@ -16,6 +16,7 @@ import '../../providers/multi_server_provider.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/global_key_utils.dart';
 import '../../utils/live_tv_player_navigation.dart';
+import '../../utils/local_media_playback.dart';
 import '../../utils/snackbar_helper.dart';
 import '../../utils/video_player_navigation.dart';
 import '../catalog/plex_catalog_source.dart';
@@ -37,6 +38,8 @@ Future<void> launchDeepLink(BuildContext context, DeepLink link, {required bool 
       await _launchPlayLink(context, link, isOffline: isOffline);
     case LiveLink():
       await _launchLiveLink(context, link, isOffline: isOffline);
+    case LocalMediaLink():
+      await playLocalMedia(context, link.source, title: link.title);
   }
 }
 

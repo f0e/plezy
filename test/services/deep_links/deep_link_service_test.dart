@@ -94,6 +94,27 @@ void main() {
     expect(session.launched, ['plezy://play?server=s1&id=1']);
   });
 
+  test('a video opened with Plezy plays in the session, and a plezy link cannot name one', () async {
+    service.host = _FakeHost(activeProfileId: 'parents');
+    final reply = Completer<ByteData?>();
+    await messenger.handlePlatformMessage(
+      channel.name,
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('onOpenMedia', {'uri': 'content://docs/document/7', 'title': 'Film.mkv'}),
+      ),
+      reply.complete,
+    );
+    expect(const StandardMethodCodec().decodeEnvelope((await reply.future)!), isTrue);
+
+    final session = _Session('parents');
+    service.attach(session.session);
+    await pumpEventQueue();
+    expect(session.launched, ['content://docs/document/7']);
+
+    expect(service.receiveMedia({'title': 'no uri'}), isFalse);
+    expect(DeepLink.tryParse('content://docs/document/7'), isNull);
+  });
+
   test('a newer link replaces one still waiting', () async {
     service.host = _FakeHost(activeProfileId: 'parents');
     service.receive('plezy://play?server=s1&id=1');

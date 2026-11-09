@@ -641,6 +641,7 @@ class PlezyActivity : FlutterActivity() {
 
   private fun handleDeepLinkIntent(intent: Intent?) {
     DeepLinkPlugin.linkFrom(intent)?.let(deepLinkPlugin::notifyLink)
+    DeepLinkPlugin.mediaFrom(this, intent)?.let(deepLinkPlugin::notifyMedia)
   }
 
   // Connects the car UX-restriction monitor on first use, retrying while the platform signal is

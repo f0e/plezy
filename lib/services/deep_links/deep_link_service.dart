@@ -89,6 +89,7 @@ class DeepLinkService {
   bool get selectsProfile => _switching || (_pending?.awaitsProfile ?? false);
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
+    if (call.method == 'onOpenMedia') return receiveMedia(call.arguments);
     if (call.method != 'onLink') throw MissingPluginException('${call.method} is not a deep link method');
     final args = call.arguments;
     final url = args is Map ? args['url'] : null;
@@ -105,6 +106,7 @@ class DeepLinkService {
     try {
       final url = await _channel.invokeMethod<String>('getInitialLink');
       if (url != null) receive(url);
+      if (Platform.isAndroid) receiveMedia(await _channel.invokeMethod<Object?>('getInitialMedia'));
     } on MissingPluginException {
       // Not registered on this platform build.
     } catch (e, stackTrace) {
@@ -135,6 +137,23 @@ class DeepLinkService {
     }
     _pending = _PendingLink(link);
     _pump();
+  }
+
+  /// Accepts a video another app opened with Plezy: a map with its `uri` and
+  /// optional `title`. Returns whether it was taken.
+  bool receiveMedia(Object? media) {
+    final uri = media is Map ? media['uri'] : null;
+    if (uri is! String || uri.isEmpty) return false;
+    if (uri == _lastUrl && _sinceLastUrl.elapsed < duplicateWindow) return true;
+    _lastUrl = uri;
+    _sinceLastUrl
+      ..reset()
+      ..start();
+    final title = (media as Map)['title'];
+    appLogger.i('Deep link: LocalMediaLink');
+    _pending = _PendingLink(LocalMediaLink(uri, title: title is String && title.isNotEmpty ? title : null));
+    _pump();
+    return true;
   }
 
   /// How long an identical URL counts as the same delivery.
