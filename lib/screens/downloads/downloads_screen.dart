@@ -22,6 +22,7 @@ import '../../widgets/music/track_row.dart';
 import '../../services/settings_service.dart';
 import '../../widgets/settings_builder.dart';
 import '../../utils/global_key_utils.dart';
+import '../../utils/local_media_playback.dart';
 import '../../mixins/tab_navigation_mixin.dart';
 import '../../mixins/refreshable.dart';
 import '../../utils/media_image_helper.dart';
@@ -200,6 +201,18 @@ class DownloadsScreenState extends State<DownloadsScreen>
                           focusNode: _retryFailedFocusNode,
                           onPressed: () => _retryDownloads(context.read<DownloadProvider>().failedDownloadKeys),
                         ),
+                      FocusableAction(
+                        icon: Symbols.file_open_rounded,
+                        tooltip: t.localMedia.openFile,
+                        debugLabel: 'downloads_play_file',
+                        onPressed: () => pickAndPlayLocalFile(context),
+                      ),
+                      FocusableAction(
+                        icon: Symbols.link_rounded,
+                        tooltip: t.localMedia.openUrl,
+                        debugLabel: 'downloads_play_url',
+                        onPressed: () => promptAndPlayMediaUrl(context),
+                      ),
                       FocusableAction(
                         icon: Symbols.rule_settings_rounded,
                         tooltip: t.downloads.activeSyncRules,

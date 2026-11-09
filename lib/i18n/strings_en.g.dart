@@ -95,6 +95,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$services$en services = Translations$services$en.internal(_root);
 	late final Translations$addServer$en addServer = Translations$addServer$en.internal(_root);
 	late final Translations$deepLinks$en deepLinks = Translations$deepLinks$en.internal(_root);
+	late final Translations$localMedia$en localMedia = Translations$localMedia$en.internal(_root);
 }
 
 // Path: app
@@ -6173,6 +6174,33 @@ class Translations$deepLinks$en {
 	String get copied => 'Link copied';
 }
 
+// Path: localMedia
+class Translations$localMedia$en {
+	Translations$localMedia$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Play a file'
+	String get openFile => 'Play a file';
+
+	/// en: 'Play a link'
+	String get openUrl => 'Play a link';
+
+	/// en: 'Video URL'
+	String get urlLabel => 'Video URL';
+
+	/// en: 'Play'
+	String get play => 'Play';
+
+	/// en: 'Enter a direct http(s) link to a video'
+	String get invalidUrl => 'Enter a direct http(s) link to a video';
+
+	/// en: 'Couldn't open the file picker'
+	String get pickFailed => 'Couldn\'t open the file picker';
+}
+
 // Path: appIcon.names
 class Translations$appIcon$names$en {
 	Translations$appIcon$names$en.internal(this._root);
@@ -10456,6 +10484,12 @@ extension on Translations {
 			'deepLinks.openAsProfile' => ({required Object name}) => 'Open as ${name}',
 			'deepLinks.copy' => 'Copy',
 			'deepLinks.copied' => 'Link copied',
+			'localMedia.openFile' => 'Play a file',
+			'localMedia.openUrl' => 'Play a link',
+			'localMedia.urlLabel' => 'Video URL',
+			'localMedia.play' => 'Play',
+			'localMedia.invalidUrl' => 'Enter a direct http(s) link to a video',
+			'localMedia.pickFailed' => 'Couldn\'t open the file picker',
 			_ => null,
 		};
 	}

@@ -2568,5 +2568,13 @@
     "openAsProfile": "Open as ${name}",
     "copy": "Copy",
     "copied": "Link copied"
+  },
+  "localMedia": {
+    "openFile": "Play a file",
+    "openUrl": "Play a link",
+    "urlLabel": "Video URL",
+    "play": "Play",
+    "invalidUrl": "Enter a direct http(s) link to a video",
+    "pickFailed": "Couldn't open the file picker"
   }
 }

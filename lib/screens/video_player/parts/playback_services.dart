@@ -538,7 +538,8 @@ extension _VideoPlayerPlaybackServiceMethods on VideoPlayerScreenState {
         },
       );
       _progressTracker!.startTracking();
-    } else if (_isOfflinePlayback) {
+    } else if (_isOfflinePlayback && metadata.serverId != null) {
+      // A file or link opened outside any server has no watch state to sync.
       _progressTracker = PlaybackProgressTracker(
         client: null,
         metadata: metadata,

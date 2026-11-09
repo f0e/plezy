@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import '../i18n/strings.g.dart';
 
 import '../database/app_database.dart';
+import '../media/local_media.dart';
 import '../media/media_item.dart';
 import '../media/media_item_types.dart';
 import '../media/media_server_client.dart';
@@ -118,6 +119,16 @@ class PlaybackInitializationService {
     bool requireOffline = false,
   }) async {
     final metadata = options.metadata;
+    // A file or URL opened outside any server plays as is.
+    final localSource = localMediaSource(metadata);
+    if (localSource != null) {
+      return PlaybackInitializationResult(
+        availableVersions: const [],
+        videoUrl: _formatVideoUrl(localSource),
+        isOffline: true,
+        playMethod: 'DirectPlay',
+      );
+    }
     final serverId = metadata.serverId ?? client?.serverId;
 
     DownloadedVideoSource? offlineSource;
